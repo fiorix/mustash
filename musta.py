@@ -193,4 +193,4 @@ run(host="127.0.0.1", port=8888,
     debug=True,
     template_path=path_of("./"),
     static_path=path_of("./static"),
-    mumu=Mustashify(path_of("./static/mustache.png"), path_of("./haar.xml"))
+    mumu=Mustashify(path_of("./static/mustache.png"), path_of("./haar.xml")))
