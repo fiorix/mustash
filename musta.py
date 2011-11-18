@@ -10,6 +10,7 @@ import urlparse
 from cStringIO import StringIO
 from cyclone import web
 from cyclone.bottle import run, route
+from cyclone.escape import json_encode
 from cyclone.httpclient import fetch
 from twisted.python import log
 from twisted.internet import defer, threads
@@ -105,9 +106,11 @@ def mustashify(req):
         raise web.HTTPError(400)
 
     try:
-        im = yield threads.deferToThread(req.settings.mumu.mustashify, im)
+        nf, im = yield threads.deferToThread(req.settings.mumu.mustashify, im)
         fd = StringIO()
         im.save(fd, fmt)
+        if nf:
+            req.settings.cache.add("/mustashify?q="+url)
     except Exception, e:
         #log.err()
         raise web.HTTPError(503)
@@ -115,9 +118,25 @@ def mustashify(req):
     req.set_header("Content-Type", content_type)
     req.finish(fd.getvalue())
 
+@route("/recents")
+def recents(req):
+    req.set_header("Content-Type", "application/json")
+    req.write(json_encode({"recents":req.settings.cache.get()}))
 
-def path_of(s):
-    return os.path.join(os.path.dirname(os.path.abspath(__file__)), s)
+class Cache:
+    def __init__(self, cache_dir):
+        self.max_items = 20
+        self.items = []
+        self.cache_dir = cache_dir
+
+    def add(self, url):
+        if url not in self.items:
+            self.items.insert(0, url)
+            self.items = self.items[:self.max_items]
+
+    def get(self, n=20):
+        return self.items[:n]
+
 
 class Mustashify:
     supported = {
@@ -173,6 +192,7 @@ class Mustashify:
                 yield adjust(x), adjust(y), adjust(w), adjust(h)
 
     def mustashify(self, image):
+        faces = 0
         for (x, y, w, h) in self.find_face(image):
             # resize our mustache keeping the aspect ratio
             mw, mh = self.im.size
@@ -185,12 +205,17 @@ class Mustashify:
             x = x+(x*5/100)
             y = (y+h)-new_size[1]-(h*15/100)
             image.paste(new_mu, (x, y, x+new_size[0], y+new_size[1]), new_mu)
+            faces += 1
 
-        return image
+        return faces, image
 
+
+def path_of(s):
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), s)
 
 run(host="127.0.0.1", port=8888,
     debug=True,
     template_path=path_of("./"),
     static_path=path_of("./static"),
+    cache=Cache(path_of("./cache")),
     mumu=Mustashify(path_of("./static/mustache.png"), path_of("./haar.xml")))

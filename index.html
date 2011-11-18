@@ -18,14 +18,51 @@
     <link rel="apple-touch-icon" sizes="72x72" href={{ static_url("images/apple-touch-icon-72x72.png") }}>
     <link rel="apple-touch-icon" sizes="114x114" href={{ static_url("images/apple-touch-icon-114x114.png") }}>
 
+     <style type="text/css">
+	     #mustache {
+		     width: 250px;
+		     display: block;
+	     }
+     </style>
+
     <!-- scripts, etc -->
     <script src="http://code.jquery.com/jquery-1.7.min.js"></script>
     <script src={{ static_url("js/bootstrap-alerts.js") }}></script>
     <script src={{ static_url("js/bootstrap-modal.js") }}></script>
     <script type="text/javascript">
+
+	var last_mustaches = undefined;
+	var rotation_timeout = 5000;
+
+	var current_mustache = 0;
+
+	function fade_musta(){
+		$("#loading").hide();
+		$("#latest").fadeIn(100);
+	}
+
+	function rotate_mustaches(){
+
+		$("#loading").show();
+		$("#latest").html('<img id="mustache" class="thumbnail" onload="fade_musta()" src="'+last_mustaches[current_mustache]+'">');
+		setTimeout(rotate_mustaches,rotation_timeout);
+
+		if (++current_mustache == last_mustaches.length) {
+			current_mustache = 0;
+		}
+	}
         $(document).ready(function(){
             $(".alert-message").alert();
             $("#sample").modal();
+	    $("#loading").hide();
+
+	    /* rotate last 10 mustachos */
+	    $.getJSON('/recents',function(data) {
+		    last_mustaches = data.recents;
+		    if(last_mustaches.length > 0) {
+		    	rotate_mustaches();
+		    }
+		    });
         });
     </script>
   </head>
@@ -58,48 +95,61 @@
 
       <!-- Example row of columns -->
       <div class="row">
-        <div class="span-two-thirds">
-          <h2>Try it yourself</h2>
-          <p>Paste or type any URL in the input below and click the button.</p>
-          <form>
-          <div class="row">
-            <div class="span8">
-              <input class="xlarge span8" name="q" type="text"/>
-	      <span class="help-block">try <a href="/?q=http://ufc.com">ufc.com</a>, <a href="/?q=http://cnn.com">cnn.com</a>, or just paste a URL to a <a href="/?q=http://7co.cc/9O">picture of yourself</a></span>
-            </div>
-            <div class="span2">
-              <input class="btn primary" type="submit" value="Go!"/>
-            </div>
-          </div>
-          </form>
+	      <div class="span-two-thirds">
+		      <h2>Try it yourself</h2>
+		      <p>Paste or type any URL in the input below and click the button.</p>
+		      <form>
+			      <div class="row">
+				      <div class="span8">
+					      <input class="span8" name="q" type="text"/>
+					      <span class="help-block">try <a href="/?q=http://ufc.com">ufc.com</a>, <a href="/?q=http://www.tmz.com">tmz.com</a>, or just paste a URL to a <a href="/?q=http://www.dailymail.co.uk/home/index.html">news website</a></span>
 
-          {% if err.get("url") == True %}
-          <div class="alert-message error">
-            <p><strong>Hey, bro</strong> come on. Give me a URL!</p>
-          </div>
-          {% end %}
+				      </div>
+				      <div class="span2">
+					      <input class="btn primary" type="submit" value="Go!"/>
+				      </div>
+			      </div>
+		      </form>
 
-          {% if err.get("fetch") == True %}
-          <div class="alert-message error">
-            <p><strong>What's up?</strong> Just give me a proper URL.</p>
-          </div>
-          {% end %}
+		      {% if err.get("url") == True %}
+		      <div class="alert-message error">
+			      <p><strong>Hey, bro</strong> come on. Give me a URL!</p>
+		      </div>
+		      {% end %}
 
-          {% if err.get("html") == True %}
-          <div class="alert-message error">
-            <p><strong>Oops!</strong> Perhaps that page's got a broken HTML.</p>
-          </div>
-          {% end %}
+		      {% if err.get("fetch") == True %}
+		      <div class="alert-message error">
+			      <p><strong>What's up?</strong> Just give me a proper URL.</p>
+		      </div>
+		      {% end %}
+
+		      {% if err.get("html") == True %}
+		      <div class="alert-message error">
+			      <p><strong>Oops!</strong> Perhaps that page's got a broken HTML.</p>
+		      </div>
+		      {% end %}
 
 
-        </div> <!-- span-two-thirds -->
+		      <div>
+			      <h3>It's on GitHub</h3>
+			      <p>If you're a developer, I'm pretty sure not only you're thinking about playing with the source code, but also you're considering growing a mustache.</p>
+			      <p><a class="btn" href="http://github.com/fiorix/mustash">Check it out &raquo;</a></p>
+		      </div>
+	      </div> <!-- span-two-thirds -->
 
-        <div class="span-one-third">
-          <h2>It's on GitHub</h2>
-           <p>If you're a developer, I'm pretty sure not only you're thinking about playing with the source code, but also you're considering growing a mustache.</p>
-          <p><a class="btn" href="http://github.com/fiorix/mustash">Check it out &raquo;</a></p>
-       </div>
+
+	      <div class="span-one-third pull-right">
+			      <ul class="media-grid">
+				      <li><a id="latest" href="#"></a></li>
+				      <li><img id="loading" src="static/ajax-loader.gif"></li>
+			      </ul>
+	      </div>
+
       </div>
+
+      <br/>
+
+
 
       <footer>
         <p>&copy; musta.sh 2011</p>
@@ -108,4 +158,17 @@
     </div> <!-- /container -->
 
   </body>
+  <script type="text/javascript">
+
+	   var _gaq = _gaq || [];
+	   _gaq.push(['_setAccount', 'UA-27139813-1']);
+	   _gaq.push(['_trackPageview']);
+
+	   (function() {
+			     var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			     ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			     var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+			   })();
+
+	  </script>
 </html>
