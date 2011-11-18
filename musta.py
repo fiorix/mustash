@@ -62,12 +62,11 @@ def index(req):
         defer.returnValue(None)
 
     try:
-        prefix=ROOT+"/mustashify?q="
         soup = BeautifulSoup.BeautifulSoup(response.body)
         make_absolute_path(soup, url, "a", "href")
         make_absolute_path(soup, url, "link", "href")
         make_absolute_path(soup, url, "script", "src")
-        make_absolute_path(soup, url, "img", "src", prefix)
+        make_absolute_path(soup, url, "img", "src", ROOT+"/mustashify?q=")
         body = str(soup)
     except Exception, e:
         #log.err()
@@ -106,7 +105,7 @@ def mustashify(req):
         raise web.HTTPError(400)
 
     try:
-        im = yield threads.deferToThread(req.settings.mumu.mustash_it, im)
+        im = yield threads.deferToThread(req.settings.mumu.mustashify, im)
         fd = StringIO()
         im.save(fd, fmt)
     except Exception, e:
@@ -122,6 +121,7 @@ def path_of(s):
 
 class Mustashify:
     supported = {
+        "image/gif": "GIF",
         "image/png": "PNG",
         "image/jpg": "JPEG",
         "image/jpeg": "JPEG",
@@ -129,10 +129,10 @@ class Mustashify:
 
     def __init__(self, mustache_image):
         try:
-            self.im = Image.open(mustache_image)
+            self.im = Image.open(mustache_image, haar_xml)
         except Exception, e:
             #log.err()
-            print("Mustache image could not be opened")
+            print("Mustache image %s could not be opened" % mustache_image)
             sys.exit(1)
 
         self.min_size = (20,20)
@@ -141,10 +141,10 @@ class Mustashify:
         self.min_neighbors = 2
         self.haar_flags = 0
         try:
-            self.cascade = cv.Load(path_of("./haar.xml"))
+            self.cascade = cv.Load(haar_xml)
         except Exception, e:
             #log.err()
-            print("Please symlink haar cascade to haar.xml")
+            print("Haar file %s could not be opened" % haar_xml)
             sys.exit(1)
 
     def find_face(self, im):
@@ -172,7 +172,7 @@ class Mustashify:
             for ((x, y, w, h), n) in faces:
                 yield adjust(x), adjust(y), adjust(w), adjust(h)
 
-    def mustash_it(self, image):
+    def mustashify(self, image):
         for (x, y, w, h) in self.find_face(image):
             # resize our mustache keeping the aspect ratio
             mw, mh = self.im.size
@@ -182,7 +182,7 @@ class Mustashify:
             new_mu = self.im.resize(new_size)
 
             # composite :}
-            x = x-(x*5/100)
+            x = x+(x*5/100)
             y = (y+h)-new_size[1]-(h*10/100)
             image.paste(new_mu, (x, y, x+new_size[0], y+new_size[1]), new_mu)
 
@@ -193,4 +193,4 @@ run(host="127.0.0.1", port=8888,
     debug=True,
     template_path=path_of("./"),
     static_path=path_of("./static"),
-    mumu=Mustashify(path_of("./static/mustache.png")))
+    mumu=Mustashify(path_of("./static/mustache.png"), path_of("./haar.xml"))
