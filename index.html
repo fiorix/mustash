@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>musta.sh</title>
+    <meta name="description" content="mustache heroes">
+    <meta name="author" content="stash man">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- Le fav and touch icons -->
+    <link href={{ static_url("bootstrap.css") }} rel="stylesheet">
+    <link rel="shortcut icon" href={{ static_url("images/favicon.ico") }}>
+    <link rel="apple-touch-icon" href={{ static_url("images/apple-touch-icon.png") }}>
+    <link rel="apple-touch-icon" sizes="72x72" href={{ static_url("images/apple-touch-icon-72x72.png") }}>
+    <link rel="apple-touch-icon" sizes="114x114" href={{ static_url("images/apple-touch-icon-114x114.png") }}>
+
+    <!-- scripts, etc -->
+    <script src="http://code.jquery.com/jquery-1.7.min.js"></script>
+    <script src={{ static_url("js/bootstrap-alerts.js") }}></script>
+    <script src={{ static_url("js/bootstrap-modal.js") }}></script>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            $(".alert-message").alert();
+            $("#sample").modal();
+        });
+    </script>
+  </head>
+
+  <body>
+
+    <div id="sample" class="modal hide fade">
+        <div class="modal-header">
+            <a href="#" class="close">&times;</a>
+            <h3>musta.sh FTW</h3>
+        </div>
+        <div class="modal-body">
+            <p>Point any image to http://musta.sh/mustashify?q=URL and get a mustache on it.</p>
+            <img src="/mustashify?q=http://bit.ly/udwZWi" width="500" />
+        </div>
+    </div>
+
+    <br />
+    <div class="container">
+
+      <!-- Main hero unit for a primary marketing message or call to action -->
+      <div class="hero-unit">
+        <div class="row">
+          <div class="span4"><img src={{ static_url("mini-mustache.png") }}/></div>
+          <div class="span8"><h1>Hello, world</h1></div>
+        </div>
+        <p>You have never seen something like this before. This web site will show you how amazing the web can be, and how much fun a programmer can have with some spare time.</p>
+        <p><a class="btn primary large" data-controls-modal="sample" data-backdrop="static">Like this &raquo;</a></p>
+      </div>
+
+      <!-- Example row of columns -->
+      <div class="row">
+        <div class="span-two-thirds">
+          <h2>Try it yourself</h2>
+          <p>Paste or type any URL in the input below and click the button.</p>
+          <form>
+          <div class="row">
+            <div class="span8">
+              <input class="xlarge span8" name="q" type="text"/>
+	      <span class="help-block">try <a href="/?q=http://ufc.com">ufc.com</a>, <a href="/?q=http://cnn.com">cnn.com</a>, or just paste a URL to a <a href="/?q=http://7co.cc/9O">picture of yourself</a></span>
+            </div>
+            <div class="span2">
+              <input class="btn primary" type="submit" value="Go!"/>
+            </div>
+          </div>
+          </form>
+
+          {% if err.get("url") == True %}
+          <div class="alert-message error">
+            <p><strong>Hey, bro</strong> come on. Give me a URL!</p>
+          </div>
+          {% end %}
+
+          {% if err.get("fetch") == True %}
+          <div class="alert-message error">
+            <p><strong>What's up?</strong> Just give me a proper URL.</p>
+          </div>
+          {% end %}
+
+          {% if err.get("html") == True %}
+          <div class="alert-message error">
+            <p><strong>Oops!</strong> Perhaps that page's got a broken HTML.</p>
+          </div>
+          {% end %}
+
+
+        </div> <!-- span-two-thirds -->
+
+        <div class="span-one-third">
+          <h2>It's on GitHub</h2>
+           <p>If you're a developer, I'm pretty sure not only you're thinking about playing with the source code, but also you're considering growing a mustache.</p>
+          <p><a class="btn" href="http://github.com/fiorix/mustash">Check it out &raquo;</a></p>
+       </div>
+      </div>
+
+      <footer>
+        <p>&copy; musta.sh 2011</p>
+      </footer>
+
+    </div> <!-- /container -->
+
+  </body>
+</html>
