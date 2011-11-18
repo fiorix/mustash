@@ -14,7 +14,7 @@ from cyclone.httpclient import fetch
 from twisted.python import log
 from twisted.internet import defer, threads
 
-ROOT="http://localhost:8888"
+ROOT="http://musta.sh"
 
 
 def make_absolute_path(soup, url, tag, opt, prefix=None):
