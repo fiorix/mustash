@@ -127,9 +127,9 @@ class Mustashify:
         "image/jpeg": "JPEG",
     }
 
-    def __init__(self, mustache_image):
+    def __init__(self, mustache_image, haar_xml):
         try:
-            self.im = Image.open(mustache_image, haar_xml)
+            self.im = Image.open(mustache_image)
         except Exception, e:
             #log.err()
             print("Mustache image %s could not be opened" % mustache_image)
