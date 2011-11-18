@@ -183,7 +183,7 @@ class Mustashify:
 
             # composite :}
             x = x+(x*5/100)
-            y = (y+h)-new_size[1]-(h*10/100)
+            y = (y+h)-new_size[1]-(h*15/100)
             image.paste(new_mu, (x, y, x+new_size[0], y+new_size[1]), new_mu)
 
         return image
