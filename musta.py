@@ -95,9 +95,10 @@ def mustashify(req):
         fmt = req.settings.mumu.supported[content_type]
     except Exception, e:
         #log.err("Invalid content-type: %s" % str(e))
-        req.set_header("Content-Type", content_type)
-        req.write(response.body)
-        defer.returnValue(None)
+        #req.set_header("Content-Type", content_type)
+        #req.write(response.body)
+        #defer.returnValue(None)
+        raise web.HTTPError(400)
 
     try:
         im = Image.open(StringIO(response.body))
