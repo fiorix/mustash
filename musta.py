@@ -213,8 +213,8 @@ class Mustashify:
 def path_of(s):
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), s)
 
-run(host="127.0.0.1", port=8888,
-    debug=True,
+run(host="127.0.0.1", port=int(os.getenv("PORT", 8888)),
+    debug=False,
     template_path=path_of("./"),
     static_path=path_of("./static"),
     cache=Cache(path_of("./cache")),
