@@ -55,7 +55,7 @@ do_start()
 	#	|| return 1
 	export PORT=$PORT
 	start-stop-daemon --start --quiet --user $USER --background --make-pidfile --pidfile $PIDFILE --exec $DAEMON -- \
-		$DAEMON_ARGS &>/tmp/zz \
+		$DAEMON_ARGS \
 		|| return 2
 	# Add code here, if necessary, that waits for the process to be ready
 	# to handle requests from services started subsequently which depend
