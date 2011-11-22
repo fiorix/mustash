@@ -38,7 +38,8 @@ def make_absolute_path(soup, url, tag, opt, prefix=None):
 def index(req):
     url = req.get_argument("q", None)
     if url:
-        if req.settings.cache.getpath(url):
+        if os.path.exists(req.settings.cache.getpath(url)):
+            print 'true???'
             req.redirect("/mustashify?q="+url)
             defer.returnValue(None)
     else:
