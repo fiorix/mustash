@@ -49,7 +49,7 @@
 	function rotate_mustaches(){
 
 		$("#loading").show();
-		$("#latest").html('<img id="mustache" class="thumbnail" onload="fade_musta()" src="'+last_mustaches[current_mustache]+'">');
+		$("#latest").html('<img id="mustache" class="thumbnail" onload="fade_musta()" src="/mustashify?q='+last_mustaches[current_mustache]+'">');
 		setTimeout(rotate_mustaches,rotation_timeout);
 
 		if (++current_mustache == last_mustaches.length) {

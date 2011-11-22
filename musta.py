@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-import cv
 import BeautifulSoup
+import cv
+import hashlib
 import Image
 import os
+import random
 import sys
 import urlparse
 from cStringIO import StringIO
@@ -35,7 +37,11 @@ def make_absolute_path(soup, url, tag, opt, prefix=None):
 @defer.inlineCallbacks
 def index(req):
     url = req.get_argument("q", None)
-    if not url:
+    if url:
+        if req.settings.cache.getpath(url):
+            req.redirect("/mustashify?q="+url)
+            defer.returnValue(None)
+    else:
         req.render("index.html", err={})
         defer.returnValue(None)
 
@@ -58,9 +64,12 @@ def index(req):
         req.render("index.html", err={"fetch":True})
         defer.returnValue(None)
 
-    if response.headers.get("Content-Type", [""])[0] in req.settings.mumu.supported:
-        req.redirect("/mustashify?q="+url)
-        defer.returnValue(None)
+    try:
+        if response.headers["Content-Type"][0] in req.settings.mumu.supported:
+            req.redirect("/mustashify?q="+url)
+            defer.returnValue(None)
+    except:
+        pass
 
     try:
         soup = BeautifulSoup.BeautifulSoup(response.body)
@@ -72,15 +81,21 @@ def index(req):
     except Exception, e:
         #log.err()
         req.render("index.html", err={"html":True})
-        defer.returnValue(None)
-
-    req.finish(body)
+    else:
+        req.finish(body)
 
 
 @route("/mustashify")
 @defer.inlineCallbacks
 def mustashify(req):
     url = req.get_argument("q")
+    obj = req.settings.cache.get(url)
+    if obj:
+        content_type, buff = obj.split("\r\n", 1)
+        req.set_header("Content-Type", content_type)
+        req.write(buff)
+        defer.returnValue(None)
+
     try:
         response = yield fetch(url, followRedirect=1, maxRedirects=3)
     except Exception, e:
@@ -110,33 +125,76 @@ def mustashify(req):
         nf, im = yield threads.deferToThread(req.settings.mumu.mustashify, im)
         fd = StringIO()
         im.save(fd, fmt)
+        buff = fd.getvalue()
         if nf:
-            req.settings.cache.add("/mustashify?q="+url)
+            req.settings.cache.add(url, content_type+"\r\n"+buff)
     except Exception, e:
         #log.err()
         raise web.HTTPError(503)
 
     req.set_header("Content-Type", content_type)
-    req.finish(fd.getvalue())
+    req.finish(buff)
+
 
 @route("/recents")
 def recents(req):
     req.set_header("Content-Type", "application/json")
-    req.write(json_encode({"recents":req.settings.cache.get()}))
+    req.write(json_encode({"recents":req.settings.cache.recents()}))
+
 
 class Cache:
-    def __init__(self, cache_dir):
+    def __init__(self, cache_dir, L1=16, L2=256, mask=0755):
         self.max_items = 20
         self.items = []
         self.cache_dir = cache_dir
+        self.L1 = L1
+        self.L2 = L2
 
-    def add(self, url):
-        if url not in self.items:
-            self.items.insert(0, url)
-            self.items = self.items[:self.max_items]
+        if not os.path.exists(cache_dir):
+            os.mkdir(cache_dir, mask)
 
-    def get(self, n=20):
-        return self.items[:n]
+        for x in xrange(L1):
+            x = str(x)
+            tmp = os.path.join(cache_dir, x)
+            if not os.path.exists(tmp):
+                os.mkdir(tmp, mask)
+
+            for y in xrange(L2):
+                y = str(y)
+                tmp = os.path.join(cache_dir, x, y)
+                if not os.path.exists(tmp):
+                    os.mkdir(tmp, mask)
+
+    def getpath(self, name):
+        m = sum([ord(n) for n in name])
+        L1 = str(m%self.L1)
+        L2 = str(m%self.L2)
+        FN = hashlib.new("md5", name).hexdigest()
+        return os.path.join(self.cache_dir, L1, L2, FN)
+
+    def get(self, name):
+        path = self.getpath(name)
+        if os.path.exists(path):
+            with open(path) as fd:
+                buff = fd.read()
+                fd.close()
+            return buff
+
+    def add(self, name, content, mask=0755):
+        path = self.getpath(name)
+        if not os.path.exists(path):
+            if name not in self.items:
+                self.items.insert(0, name)
+                self.items = self.items[:self.max_items]
+            with open(path+".tmp", "w", mask) as fd:
+                fd.write(content)
+                fd.close()
+            os.rename(path+".tmp", path)
+
+    def recents(self, max=20):
+        n = self.items[:max]
+        random.shuffle(n)
+        return n
 
 
 class Mustashify:
