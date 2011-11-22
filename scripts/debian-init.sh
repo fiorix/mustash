@@ -9,11 +9,6 @@
 # Description:       musta.sh web server
 ### END INIT INFO
 
-# Author: Alexandre Fiori <fiorix@gmail.com>
-#
-# Please remove the "Author" lines above and replace them
-# with your own name if you copy and modify this script.
-
 # Do NOT "set -e"
 
 [ "$PORT" ] || PORT=8888
