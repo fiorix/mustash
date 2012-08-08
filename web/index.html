@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>musta.sh</title>
+    <meta name="description" content="mustache heroes">
+    <meta name="author" content="stash man">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- Le fav and touch icons -->
+    <link href={{ static_url("bootstrap.css") }} rel="stylesheet">
+    <link rel="shortcut icon" href={{ static_url("favicon.png") }}>
+    <link rel="apple-touch-icon" href={{ static_url("mustache-72x72.png") }}>
+    <link rel="apple-touch-icon" sizes="72x72" href={{ static_url("mustache-72x72.png") }}>
+    <link rel="apple-touch-icon" sizes="114x114" href={{ static_url("mustache-114x114.png") }}>
+
+     <style type="text/css">
+	     body {
+		     margin-top: 60px;
+	     }
+
+	     #mustache {
+		     width: 250px;
+		     display: block;
+	     }
+
+     </style>
+
+    <!-- scripts, etc -->
+    <script src="http://code.jquery.com/jquery-1.7.min.js"></script>
+    <script src={{ static_url("js/bootstrap-alerts.js") }}></script>
+    <script src={{ static_url("js/bootstrap-modal.js") }}></script>
+    <script type="text/javascript">
+
+	var last_mustaches = undefined;
+	var rotation_timeout = 5000;
+
+	var current_mustache = 0;
+
+	function fade_musta(){
+		$("#loading").hide();
+		$("#latest").fadeIn(100);
+	}
+
+	function rotate_mustaches(){
+
+		$("#loading").show();
+		$("#latest").html('<img id="mustache" class="thumbnail" onload="fade_musta()" src="/mustashify?q='+last_mustaches[current_mustache]+'">');
+		setTimeout(rotate_mustaches,rotation_timeout);
+
+		if (++current_mustache == last_mustaches.length) {
+			current_mustache = 0;
+		}
+	}
+        $(document).ready(function(){
+            $(".alert-message").alert();
+	    $("#loading").hide();
+
+	    /* rotate last 10 mustachos */
+	    $.getJSON('/recents',function(data) {
+		    last_mustaches = data.recents;
+		    if(last_mustaches.length > 0) {
+		    	rotate_mustaches();
+		    }
+		    });
+        });
+    </script>
+  </head>
+
+  <body>
+	  <div id="fb-root"></div>
+	  <script>(function(d, s, id) {
+		  var js, fjs = d.getElementsByTagName(s)[0];
+		  if (d.getElementById(id)) {return;}
+		  js = d.createElement(s); js.id = id;
+		  js.src = "//connect.facebook.net/en_US/all.js#xfbml=1";
+		  fjs.parentNode.insertBefore(js, fjs);
+		  }(document, 'script', 'facebook-jssdk'));</script>
+    <div class="container">
+
+      <!-- Main hero unit for a primary marketing message or call to action -->
+      <div class="hero-unit">
+        <div class="row">
+          <div class="span4"><img src={{ static_url("mini-mustache.png") }}/></div>
+          <div class="span8"><h1>Hello, world</h1></div>
+        </div>
+        <p>You have never seen anything like this before. This web site will show you how amazing the web can be, and how much fun a programmer can have with some spare time.</p>
+
+	<a href="https://twitter.com/share" class="twitter-share-button" data-count="horizontal">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script>
+	<br/>
+	<div class="fb-like" data-href="http://musta.sh/" data-send="false" data-layout="button" data-width="50" data-show-faces="false" data-font="lucida grande"></div>
+      </div>
+
+      <!-- Example row of columns -->
+      <div class="row">
+	      <div class="span-two-thirds">
+		      <h2>Try it yourself</h2>
+		      <p>Paste or type any URL in the input below and click the button.</p>
+		      <form>
+			      <div class="row">
+				      <div class="span8">
+					      <input class="span8" name="q" type="text"/>
+					      <span class="help-block">try <a href="/?q=http://ufc.com">ufc.com</a>, <a href="/?q=http://www.tmz.com">tmz.com</a>, or just paste a URL to a <a href="/?q=http://www.dailymail.co.uk/home/index.html">news website</a></span>
+
+				      </div>
+				      <div class="span2">
+					      <input class="btn primary" type="submit" value="Go!"/>
+				      </div>
+			      </div>
+		      </form>
+
+		      {% if err.get("url") == True %}
+		      <div class="alert-message error">
+			      <p><strong>Hey, bro</strong> come on. Give me a URL!</p>
+		      </div>
+		      {% end %}
+
+		      {% if err.get("fetch") == True %}
+		      <div class="alert-message error">
+			      <p><strong>What's up?</strong> Just give me a proper URL.</p>
+		      </div>
+		      {% end %}
+
+		      {% if err.get("html") == True %}
+		      <div class="alert-message error">
+			      <p><strong>Oops!</strong> Perhaps that page's got a broken HTML.</p>
+		      </div>
+		      {% end %}
+
+
+		      <div class="span-one-third">
+			      <h3>It's on GitHub</h3>
+			      <p>If you're a developer, I'm pretty sure not only you're thinking about playing with the source code, but also you're considering growing a mustache.</p>
+			      <p><a class="btn" href="http://github.com/fiorix/mustash">Check it out &raquo;</a></p>
+		      </div>
+	      </div> <!-- span-two-thirds -->
+
+
+	      <div class="span-one-third pull-right">
+			      <ul class="media-grid">
+				      <li><a id="latest" href="#"></a></li>
+				      <li><img id="loading" src="static/ajax-loader.gif"></li>
+			      </ul>
+	      </div>
+
+      </div>
+
+      <br/>
+
+
+
+      <footer>
+        <p>&copy; musta.sh 2011</p>
+      </footer>
+
+    </div> <!-- /container -->
+
+  </body>
+  <script type="text/javascript">
+
+	   var _gaq = _gaq || [];
+	   _gaq.push(['_setAccount', 'UA-27139813-1']);
+	   _gaq.push(['_trackPageview']);
+
+	   (function() {
+			     var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			     ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			     var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+			   })();
+
+	  </script>
+</html>
